@@ -1,5 +1,5 @@
 # EVEYES 360 TRACKING 🏥ENG
-**Advanced AI-Integrated Hospital Safety & Patient Monitoring Ecosystem**
+**Advanced AI-Integrated Hospital & Home Safety - Patient Monitoring Ecosystem**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
