@@ -1,9 +1,13 @@
 import streamlit as st
 import cv2
-import mediapipe as mp
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import mediapipe as mp
+
+# Bu satırın doğru olduğundan emin ol
+mp_pose = mp.solutions.pose 
+pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
 # Sayfa Konfigürasyonu
 st.set_page_config(page_title="EVEYES 360 Dashboard", layout="wide")
