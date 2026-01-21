@@ -17,7 +17,7 @@ except Exception as e:
 
 # Sayfa Konfigürasyonu
 st.set_page_config(page_title="EVEYES 360 Dashboard", layout="wide")
-st.title("🏥 EVEYES 360 - AI Agent Home-Hospital Monitoring")
+st.title("🏥 EVEYES 360 - AI Agent Home-Hospital Tracking")
 
 # Sidebar - Sistem Kontrolü
 st.sidebar.title("System Control")
