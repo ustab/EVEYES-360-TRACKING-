@@ -17,12 +17,7 @@ except ImportError as e:
     st.error(f"Kütüphane yükleme hatası: {e}")
 except AttributeError as e:
     st.error(f"Özellik hatası (AttributeError): {e}. Lütfen requirements.txt dosyasını kontrol edin.")
-# Mediapipe'ı hata almayacak şekilde yükle
-try:
-    import mediapipe as mp
-    from mediapipe.python.solutions import pose as mp_pose
-    from mediapipe.python.solutions import drawing_utils as mp_drawing
-    
+# Mediapipe'ı hata almayacak şekilde yükle   
     # Model başlatma
     pose_tracker = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
     st.success("AI Modülü Başarıyla Yüklendi")
