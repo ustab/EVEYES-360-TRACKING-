@@ -1,19 +1,19 @@
 import cv2
-import face_recognition
+#import face_recognition
 import numpy as np
 
 # 1. ADIM: Bilinen Yüzlerin Sisteme Kaydedilmesi (Veri Tabanı Ön Hazırlığı)
 # Burada örnek olarak bir doktorun fotoğrafını yüklüyoruz.
 # 'doktor_foto.jpg' dosyasının projenizle aynı klasörde olduğundan emin olun.
 
-try:
-    doktor_image = face_recognition.load_image_file("doktor_foto.jpg")
-    doktor_face_encoding = face_recognition.face_encodings(doktor_image)[0]
-except IndexError:
-    print("HATA: Fotoğrafta yüz bulunamadı veya dosya yok.")
+#try:
+   # doktor_image = face_recognition.load_image_file("doktor_foto.jpg")
+   # doktor_face_encoding = face_recognition.face_encodings(doktor_image)[0]
+#except IndexError:
+    #print("HATA: Fotoğrafta yüz bulunamadı veya dosya yok.")
 
 # Tanınan yüzlerin listesi ve isimleri
-known_face_encodings = [doktor_face_encoding]
+#known_face_encodings = [doktor_face_encoding]
 known_face_names = ["Dr. Ahmet Yilmaz"]
 
 # 2. ADIM: Kamera Akışını Başlatma
@@ -436,3 +436,98 @@ if __name__ == "__main__":
     import uvicorn
     # Bu komutla API sunucusu 8000 portunda başlar
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+    import cv2
+import threading
+from queue import Queue
+
+class SmartCameraStream:
+    def __init__(self, rtsp_url):
+        # NVIDIA Jetson için donanım hızlandırmalı GStreamer pipeline'ı
+        # Bu satır, CPU'yu yormadan GPU üzerinden görüntüyü çözer
+        self.pipeline = (
+            f"rtspsrc location={rtsp_url} latency=0 ! "
+            "rtph264depay ! h264parse ! nvv4l2decoder ! "
+            "nvvidconv ! video/x-raw, format=BGRx ! videoconvert ! appsink"
+        )
+        self.cap = cv2.VideoCapture(self.pipeline, cv2.CAP_GSTREAMER)
+        self.q = Queue()
+        self.stopped = False
+
+    def _reader(self):
+        """Kameradan gelen kareleri sürekli oku ve kuyruğa at (Frame Buffer)"""
+        while not self.stopped:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            if not self.q.empty():
+                try:
+                    self.q.get_nowait() # Eski kareyi at (Gerçek zamanlılık için)
+                except:
+                    pass
+            self.q.put(frame)
+
+    def get_frame(self):
+        return self.q.get()
+
+    def stop(self):
+        self.stopped = True
+        self.cap.release()
+
+# --- ENTEGRASYON ---
+# Örn: Acil Servis Kamerası
+camera_1 = SmartCameraStream("rtsp://admin:password@192.168.1.50:554/stream")
+t = threading.Thread(target=camera_1._reader)
+t.start()
+
+while True:
+    frame = camera_1.get_frame()
+    
+    # Burada daha önce yazdığımız AI modüllerini çağırıyoruz:
+    # 1. Yüzü bul -> recognize_faces(frame)
+    # 2. İskeleti çıkar -> detect_pose(frame)
+    # 3. Şiddet var mı? -> analyze_aggression(frame)
+    
+    cv2.imshow("EVEYES 360 Live - Emergency Ward", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+camera_1.stop()
+import multiprocessing as mp
+import time
+
+def thermal_sensor_worker(data_queue):
+    """Termal sensörden bağımsız bir çekirdekte veri okur."""
+    while True:
+        # Gerçek sensör okuma kodu burada olacak
+        simulated_temp = 36.6 + (time.time() % 2) 
+        data_queue.put({"type": "thermal", "val": simulated_temp})
+        time.sleep(0.125) # 8 Hz
+
+def camera_ai_worker(data_queue):
+    """NVIDIA TensorRT kullanarak GPU üzerinden görüntü işler."""
+    while True:
+        # AI Analiz sonuçları
+        # Örn: detect_fall() -> True
+        data_queue.put({"type": "vision", "alert": "Fall Detected"})
+        time.sleep(0.033) # 30 FPS
+
+if __name__ == "__main__":
+    shared_queue = mp.Queue()
+    
+    # Süreçleri başlat
+    p1 = mp.Process(target=thermal_sensor_worker, args=(shared_queue,))
+    p2 = mp.Process(target=camera_ai_worker, args=(shared_queue,))
+    
+    p1.start()
+    p2.start()
+
+    # MASTER ANALİZÖR: Gelen verileri birleştirir (Data Fusion)
+    while True:
+        if not shared_queue.empty():
+            data = shared_queue.get()
+            if data['type'] == 'thermal' and data['val'] > 39.0:
+                print(f"KRİTİK: Hastanın ateşi yükseldi! ({data['val']}°C)")
+            if data['type'] == 'vision' and data['alert'] == 'Fall Detected':
+                print("ACİL: Düşme algılandı! Kameralar odaya odaklanıyor.")
