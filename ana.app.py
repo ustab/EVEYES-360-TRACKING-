@@ -3,8 +3,6 @@ import cv2
 import pandas as pd
 import numpy as np
 from datetime import datetime
-import streamlit as st
-import cv2
 
 # Mediapipe'ı güvenli bir şekilde içe aktar
 try:
