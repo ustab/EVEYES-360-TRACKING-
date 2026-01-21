@@ -1,17 +1,23 @@
-import streamlit as st
-import cv2
+
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import streamlit as st
+import cv2
 
-# Mediapipe'ı güvenli bir şekilde içe aktar
+# Mediapipe'ı hata almayacak şekilde yükle
 try:
     import mediapipe as mp
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
-    mp_drawing = mp.solutions.drawing_utils
-except Exception as e:
-    st.error(f"AI Modülü yüklenirken bir hata oluştu: {e}")
+    from mediapipe.python.solutions import pose as mp_pose
+    from mediapipe.python.solutions import drawing_utils as mp_drawing
+    
+    # Model başlatma
+    pose_tracker = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
+    st.success("AI Modülü Başarıyla Yüklendi")
+except ImportError as e:
+    st.error(f"Kütüphane yükleme hatası: {e}")
+except AttributeError as e:
+    st.error(f"Özellik hatası (AttributeError): {e}. Lütfen requirements.txt dosyasını kontrol edin.")
 
 # Sayfa Konfigürasyonu
 st.set_page_config(page_title="EVEYES 360 Dashboard", layout="wide")
