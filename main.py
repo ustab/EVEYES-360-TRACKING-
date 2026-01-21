@@ -1,3 +1,62 @@
+import streamlit as st
+import cv2
+import mediapipe as mp
+import time
+
+# --- SAYFA AYARLARI ---
+st.set_page_config(page_title="EVEYES 360 Master Control", layout="wide")
+
+st.title("🏥 EVEYES 360 - AI Hospital Monitoring")
+st.sidebar.header("📊 Sistem Durumu")
+st.sidebar.success("Sistem: AKTİF")
+
+# --- MEDIAPIPE HAZIRLIK ---
+mp_pose = mp.solutions.pose
+pose = mp_pose.Pose()
+mp_drawing = mp.solutions.drawing_utils
+
+# --- DASHBOARD PANELİ ---
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("📷 Canlı AI Analiz Akışı")
+    frame_placeholder = st.empty() # Görüntü buraya basılacak
+
+with col2:
+    st.subheader("🚨 Anlık Bildirimler")
+    alert_placeholder = st.empty()
+    st.subheader("🌡️ Vital Veriler (Simüle)")
+    temp_chart = st.line_chart([36.5, 36.6, 36.8, 37.1])
+
+# --- CANLI GÖRÜNTÜ İŞLEME DÖNGÜSÜ ---
+cap = cv2.VideoCapture(0)
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # MediaPipe İşleme
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = pose.process(rgb_frame)
+
+    # İskelet Çizimi
+    if results.pose_landmarks:
+        mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        
+        # Basit Bir Düşme Analizi Göstergesi
+        nose_y = results.pose_landmarks.landmark[0].y
+        if nose_y > 0.7: # Eşik değer
+            alert_placeholder.error("UYARI: Düşme Algılandı! (Oda 204)")
+        else:
+            alert_placeholder.info("Durum: Hasta Stabil")
+
+    # Streamlit'e Görüntüyü Bas
+    frame_placeholder.image(frame, channels="BGR", use_column_width=True)
+    
+    time.sleep(0.01) # CPU'yu yormamak için
+
+cap.release()
 import cv2
 import face_recognition
 import numpy as np
@@ -548,3 +607,4 @@ def load_engine(engine_file_path):
         return runtime.deserialize_cuda_engine(f.read())
 
 # AI işlemlerini 'Asenkron' (Async) yaparak kameranın donmasını engelliyoruz
+
