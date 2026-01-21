@@ -1,19 +1,19 @@
 import cv2
-#import face_recognition
+import face_recognition
 import numpy as np
 
 # 1. ADIM: Bilinen Yüzlerin Sisteme Kaydedilmesi (Veri Tabanı Ön Hazırlığı)
 # Burada örnek olarak bir doktorun fotoğrafını yüklüyoruz.
 # 'doktor_foto.jpg' dosyasının projenizle aynı klasörde olduğundan emin olun.
 
-#try:
-   # doktor_image = face_recognition.load_image_file("doktor_foto.jpg")
-   # doktor_face_encoding = face_recognition.face_encodings(doktor_image)[0]
-#except IndexError:
+try:
+   doktor_image = face_recognition.load_image_file("doktor_foto.jpg")
+   doktor_face_encoding = face_recognition.face_encodings(doktor_image)[0]
+except IndexError:
     #print("HATA: Fotoğrafta yüz bulunamadı veya dosya yok.")
 
 # Tanınan yüzlerin listesi ve isimleri
-#known_face_encodings = [doktor_face_encoding]
+known_face_encodings = [doktor_face_encoding]
 known_face_names = ["Dr. Ahmet Yilmaz"]
 
 # 2. ADIM: Kamera Akışını Başlatma
@@ -531,3 +531,20 @@ if __name__ == "__main__":
                 print(f"KRİTİK: Hastanın ateşi yükseldi! ({data['val']}°C)")
             if data['type'] == 'vision' and data['alert'] == 'Fall Detected':
                 print("ACİL: Düşme algılandı! Kameralar odaya odaklanıyor.")
+
+
+# Farklı sensörlerden gelen veriyi 'Timestamp' (Zaman Damgası) ile eşleştirme
+def sync_sensor_data(vision_data, vital_data):
+    # Eğer vizyon düşme diyorsa VE nabız aniden yükselmişse (STRESS DETECTED)
+    if vision_data['action'] == "fallen" and vital_data['heart_rate'] > 110:
+        return "CRITICAL ALERT: FALL + HIGH DISTRESS"
+    return "MONITORING"
+# Modeli Jetson üzerinde GPU ile çalıştırmak için örnek motor başlatma
+import tensorrt as trt
+
+def load_engine(engine_file_path):
+    # Bu fonksiyon, AI modelini donanımın mimarisine göre optimize eder
+    with open(engine_file_path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
+        return runtime.deserialize_cuda_engine(f.read())
+
+# AI işlemlerini 'Asenkron' (Async) yaparak kameranın donmasını engelliyoruz
