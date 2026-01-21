@@ -6,7 +6,7 @@ import time
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="EVEYES 360 Master Control", layout="wide")
 
-st.title("🏥 EVEYES 360 - AI Hospital Monitoring")
+st.title("🏥 EVEYES 360 - AI Hospital-Home Tracking")
 st.sidebar.header("📊 Sistem Durumu")
 st.sidebar.success("Sistem: AKTİF")
 
@@ -607,4 +607,5 @@ def load_engine(engine_file_path):
         return runtime.deserialize_cuda_engine(f.read())
 
 # AI işlemlerini 'Asenkron' (Async) yaparak kameranın donmasını engelliyoruz
+
 
